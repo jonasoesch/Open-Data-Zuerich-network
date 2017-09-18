@@ -1,0 +1,282 @@
+<html>
+<head>
+    <meta charset="UTF-8" />
+<!-- START SIGMA IMPORTS -->
+<script src="js/sigmajs/src/sigma.core.js"></script>
+<script src="js/sigmajs/src/conrad.js"></script>
+<script src="js/sigmajs/src/utils/sigma.utils.js"></script>
+<script src="js/sigmajs/src/utils/sigma.polyfills.js"></script>
+<script src="js/sigmajs/src/sigma.settings.js"></script>
+<script src="js/sigmajs/src/classes/sigma.classes.dispatcher.js"></script>
+<script src="js/sigmajs/src/classes/sigma.classes.configurable.js"></script>
+<script src="js/sigmajs/src/classes/sigma.classes.graph.js"></script>
+<script src="js/sigmajs/src/classes/sigma.classes.camera.js"></script>
+<script src="js/sigmajs/src/classes/sigma.classes.quad.js"></script>
+<script src="js/sigmajs/src/captors/sigma.captors.mouse.js"></script>
+<script src="js/sigmajs/src/captors/sigma.captors.touch.js"></script>
+<script src="js/sigmajs/plugins/sigma.plugins.tooltips.js"></script>
+<script src="js/sigmajs/src/renderers/sigma.renderers.webgl.js"></script>
+<script src="js/sigmajs/src/renderers/sigma.renderers.def.js"></script>
+<script src="js/sigmajs/src/renderers/webgl/sigma.webgl.nodes.def.js"></script>
+<script src="js/sigmajs/src/renderers/webgl/sigma.webgl.nodes.fast.js"></script>
+<script src="js/sigmajs/src/renderers/webgl/sigma.webgl.edges.def.js"></script>
+<script src="js/sigmajs/src/renderers/webgl/sigma.webgl.edges.fast.js"></script>
+<script src="js/sigmajs/src/renderers/webgl/sigma.webgl.edges.arrow.js"></script>
+<script src="js/sigmajs/src/renderers/canvas/sigma.canvas.labels.def.js"></script>
+<script src="js/sigmajs/src/renderers/canvas/sigma.canvas.hovers.def.js"></script>
+<script src="js/sigmajs/src/renderers/canvas/sigma.canvas.nodes.def.js"></script>
+<script src="js/sigmajs/src/renderers/canvas/sigma.canvas.extremities.def.js"></script>
+<script src="js/sigmajs/src/middlewares/sigma.middlewares.rescale.js"></script>
+<script src="js/sigmajs/src/middlewares/sigma.middlewares.copy.js"></script>
+<script src="js/sigmajs/src/misc/sigma.misc.animation.js"></script>
+<script src="js/sigmajs/src/misc/sigma.misc.bindEvents.js"></script>
+<script src="js/sigmajs/src/misc/sigma.misc.drawHovers.js"></script>
+<script src="js/sigmajs/plugins/sigma.parsers.gexf/gexf-parser.js"></script>
+<script src="js/sigmajs/plugins/sigma.parsers.gexf/sigma.parsers.gexf.js"></script>
+<script src="js/underscore-min.js"></script>
+  <style>
+      body {
+          font-family: sans-serif;
+      }
+
+      #graph-container {
+          top: 60px;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          position: absolute;
+      }
+
+
+      .buttongroup {
+          width: 100%;
+          text-align: center;
+          margin-top: 20px;
+          z-index: 10;
+      }
+
+      .buttongroup button {
+          background: #fff;
+          border: 1px solid #777;
+          color: inherit;
+          font: inherit;
+          line-height: normal;
+          padding: 5px;
+          margin: 0;
+          box-sizing: border-box;
+          font-family: sans-serif;
+          font-size: 0.7em;
+          z-index: 10;
+          border-radius: 2px;
+          border-bottom-width: 3px;
+      }
+
+      .buttongroup button:active {
+        position: relative;
+        top: 3px;
+        border-bottom-width: 1px;
+      }
+
+      .buttongroup button:not(:first-child) {
+          margin-left: -5px;
+      }
+
+      .buttongroup button:focus {
+          background-color: aliceblue;
+          outline: none;
+      }
+
+      #link-twitter {
+          position: relative;
+          background-color: rgba(255, 1255, 255, 1);
+          padding: 10px;
+          border-radius: 3px;
+          font-size: 0.8em;
+          top: -25px;
+          left: 0px;
+          border: 1px solid #7F7F7F;
+      }
+
+      #link-twitter a {
+          text-decoration: none;
+          color: #236B8E;
+          font-family: sans-serif;
+      }
+
+      #link-twitter:before {
+          content: '';
+          position: absolute;
+          border-style: solid;
+          border-width: 10px 12px 0;
+          border-color: #7F7F7F transparent;
+          display: block;
+          width: 0;
+          z-index: 0;
+          margin-left: -12px;
+          bottom: -11px;
+          left: 45%;
+      }
+
+      #link-twitter:after {
+          content: '';
+          position: absolute;
+          border-style: solid;
+          border-width: 10px 12px 0;
+          border-color: rgba(255, 255, 255, 1) transparent;
+          display: block;
+          width: 0;
+          z-index: 1;
+          margin-left: -12px;
+          bottom: -10px;
+          left: 45%;
+      }
+
+      #legende {
+          margin-top: 40px;
+      }
+
+      #legende h1 {
+          font-size: 14px;
+          width: 200px;
+      }
+
+      #legende li {
+          list-style: none;
+          font-size: 14px;
+      }
+
+      .color {
+          display: inline-block;
+          height: 10px;
+          width:10px;
+      }
+
+
+  </style>
+</head>
+<body>
+
+  <div id="graph-container"></div>
+  <div class="buttongroup">
+      <button id="reset"><strong>Reset</strong></button>
+  </div>
+  <ul id="legende">
+      <li>
+          <strong>Anzahl Tweets</strong>
+      </li>
+      <li><span class="color"></span> Unter 100</li>
+      <li><span class="color"></span> 100 – 800</li>
+      <li><span class="color"></span> 800 – 3000</li>
+      <li><span class="color"></span> 3000 – 15'000</li>
+      <li><span class="color"></span> über 15'000</li>
+  </ul>
+</div>
+
+<script>
+
+sigma.classes.graph.addMethod('neighbors', function(nodeId) {
+    var k,
+        neighbors = {},
+        index = this.allNeighborsIndex[nodeId] || {};
+
+    for (k in index)
+        neighbors[k] = this.nodesIndex[k];
+
+    return neighbors;
+});
+
+    sigma.settings.labelThreshold = 7;
+    sigma.settings.minEdgeSize = 0.1;
+    sigma.settings.maxEdgeSize = 0.1;
+    sigma.settings.maxNodeSize = 20;
+    sigma.settings.labelColor = "node";
+    sigma.settings.borderSize = 1;
+    sigma.settings.drawEdges = false;
+
+sigma.parsers.gexf('data/odzurich.gexf', {
+    container: 'graph-container',
+    },
+    function(s) {
+
+        var colorscheme =
+            ['#E0D4B2','#3E8C84','#296B73','#194759','#0F2D40'];
+        //    ['#DCFAC0','#B1E1AE','#85C79C','#56AE8B','#00968B'];
+        //    ['#edf8fb','#b3cde3','#8c96c6','#8856a7','#810f7c'];
+
+
+        _(document.querySelectorAll('#legende .color')).each(function(el, i){
+            el.setAttribute('style', 'background-color:'+colorscheme[i]);
+        });
+
+        function color(value) {
+            value = Number(value);
+
+            if(value < 100)
+                return colorscheme[0];
+            if(value < 800)
+                return colorscheme[1];
+            if(value < 3000)
+                return colorscheme[2];
+            if(value < 15000)
+                return colorscheme[3];
+            if( value >= 15000)
+                return colorscheme[4];
+        }
+
+        _(s.graph.nodes()).each(function (node) {
+            node.color = color(node.attributes.statuses);
+            node.size = node.attributes.followers / 1000;
+        });
+        s.refresh();
+
+
+        sigma.plugins.tooltips(s, s.renderers[0], {
+            node: {
+                template: '',
+                renderer: function(node, template) {
+                    node.degree = this.degree(node.id);
+                    return '<div id="link-twitter"><a href="https://twitter.com/'+node.label+'"><strong>'+node.label+'</strong> auf Twitter</a></div>'
+                }
+            }
+        });
+
+
+        s.bind('clickNode', function(e){
+            selectNode(e.data.node);
+        });
+
+        s.bind('coordinatesUpdated', function(e) {
+            var visibleLink = document.querySelector('#twitter-link.visible');
+            if(visibleLink.length > 0) {
+                visibleLink[0].setAttribute('class', 'hidden')
+            }
+        });
+
+        document.getElementById('reset').addEventListener('click', function(evt) {
+            _(s.graph.nodes()).each(function(n){
+                n.color = color(n.attributes.statuses);
+            })
+            s.refresh();
+        });
+
+
+        function selectNode(node) {
+           var nodeId = node.id,
+            toKeep = s.graph.neighbors(nodeId);
+            toKeep[nodeId] = node;
+
+            _(s.graph.nodes()).each(function(n) {
+              if (toKeep[n.id])
+                n.color = color(n.attributes.statuses);
+              else
+                n.color = 'rgba(255,255,255,0.1)';
+            });
+            s.refresh();
+        }
+
+    });
+
+
+</script>
+</body>
+</html>
